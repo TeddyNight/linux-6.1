@@ -138,9 +138,17 @@ asmlinkage __visible __trap_section void do_trap_insn_illegal(struct pt_regs *re
 #endif
 
 	if (has_vector() && user_mode(regs)) {
+		irqentry_enter_from_user_mode(regs);
+
+		local_irq_enable();
+
 		if (riscv_v_first_use_handler(regs)) {
 			flag = 1;
 		}
+
+		local_irq_disable();
+
+		irqentry_exit_to_user_mode(regs);
 	}
 
 #ifdef CONFIG_BIND_THREAD_TO_AICORES
