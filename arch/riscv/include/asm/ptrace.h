@@ -45,13 +45,16 @@ struct pt_regs {
 	unsigned long t4;
 	unsigned long t5;
 	unsigned long t6;
+	/* a0 value before the syscall */
+	unsigned long orig_a0;
 	/* Supervisor/Machine CSRs */
 	unsigned long status;
 	unsigned long badaddr;
 	unsigned long cause;
-	/* a0 value before the syscall */
-	unsigned long orig_a0;
 };
+
+#define PTRACE_SYSEMU			0x1f
+#define PTRACE_SYSEMU_SINGLESTEP	0x20
 
 #ifdef CONFIG_64BIT
 #define REG_FMT "%016lx"
@@ -61,7 +64,7 @@ struct pt_regs {
 
 #define user_mode(regs) (((regs)->status & SR_PP) == 0)
 
-#define MAX_REG_OFFSET offsetof(struct pt_regs, orig_a0)
+#define MAX_REG_OFFSET offsetof(struct pt_regs, cause)
 
 /* Helpers for working with the instruction pointer */
 static inline unsigned long instruction_pointer(struct pt_regs *regs)
@@ -121,8 +124,6 @@ extern unsigned long regs_get_kernel_stack_nth(struct pt_regs *regs,
 
 void prepare_ftrace_return(unsigned long *parent, unsigned long self_addr,
 			   unsigned long frame_pointer);
-int do_syscall_trace_enter(struct pt_regs *regs);
-void do_syscall_trace_exit(struct pt_regs *regs);
 
 /**
  * regs_get_register() - get register value from its offset
@@ -170,6 +171,11 @@ static inline unsigned long regs_get_kernel_argument(struct pt_regs *regs,
 	if (n < nr_reg_arguments)
 		return regs_get_register(regs, argument_offs[n]);
 	return 0;
+}
+
+static inline int regs_irqs_disabled(struct pt_regs *regs)
+{
+	return !(regs->status & SR_PIE);
 }
 
 #endif /* __ASSEMBLY__ */
