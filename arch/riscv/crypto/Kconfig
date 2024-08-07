@@ -23,10 +23,12 @@ config CRYPTO_CHACHA_RISCV64
 	depends on 64BIT && RISCV_ISA_V && TOOLCHAIN_HAS_VECTOR_CRYPTO
 	select CRYPTO_SKCIPHER
 	select CRYPTO_LIB_CHACHA_GENERIC
+	select CRYPTO_ARCH_HAVE_LIB_CHACHA
 	help
 	  Length-preserving ciphers: ChaCha20 stream cipher algorithm
 
 	  Architecture: riscv64 using:
+	  - V vector extension
 	  - Zvkb vector crypto extension
 
 endmenu

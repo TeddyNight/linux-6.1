@@ -18,6 +18,68 @@ asmlinkage void chacha20_zvkb(const u32 key[8], const u8 *in, u8 *out,
 asmlinkage void chacha20_v(const u32 key[8], const u8 *in, u8 *out,
 			      size_t len, const u32 iv[4]);
 
+static void do_chacha20_v(u32 *state, const u8 *src, u8 *dst,
+		              int bytes)
+{
+	u8 block_buffer[CHACHA_BLOCK_SIZE];
+	unsigned int nbytes;
+	unsigned int tail_bytes;
+	while (bytes > 0) {
+		int l = min(bytes, CHACHA_BLOCK_SIZE * 4);
+		nbytes = l & ~(CHACHA_BLOCK_SIZE - 1);
+		tail_bytes = l & (CHACHA_BLOCK_SIZE - 1);
+		kernel_vector_begin();
+		if (nbytes) {
+			chacha20_v(&state[4], src, dst,
+				   nbytes, &state[12]);
+			state[12] += nbytes / CHACHA_BLOCK_SIZE;
+		}
+		if (l == bytes && tail_bytes > 0) {
+			memcpy(block_buffer, src,
+			       tail_bytes);
+			chacha20_v(&state[4], block_buffer, block_buffer,
+			           CHACHA_BLOCK_SIZE, &state[12]);
+			memcpy(dst, block_buffer,
+			       tail_bytes);
+		}
+		kernel_vector_end();
+		bytes -= l;
+		src += l;
+		dst += l;
+	}
+}
+
+static void do_chacha20_zvkb(u32 *state, const u8 *src, u8 *dst,
+		              int bytes)
+{
+	u8 block_buffer[CHACHA_BLOCK_SIZE];
+	unsigned int nbytes;
+	unsigned int tail_bytes;
+	while (bytes > 0) {
+		int l = min(bytes, CHACHA_BLOCK_SIZE * 4);
+		nbytes = l & ~(CHACHA_BLOCK_SIZE - 1);
+		tail_bytes = l & (CHACHA_BLOCK_SIZE - 1);
+		kernel_vector_begin();
+		if (nbytes) {
+			chacha20_zvkb(&state[4], src, dst,
+				   nbytes, &state[12]);
+			state[12] += nbytes / CHACHA_BLOCK_SIZE;
+		}
+		if (l == bytes && tail_bytes > 0) {
+			memcpy(block_buffer, src,
+			       tail_bytes);
+			chacha20_zvkb(&state[4], block_buffer, block_buffer,
+			           CHACHA_BLOCK_SIZE, &state[12]);
+			memcpy(dst, block_buffer,
+			       tail_bytes);
+		}
+		kernel_vector_end();
+		bytes -= l;
+		src += l;
+		dst += l;
+	}
+}
+
 static int riscv64_chacha20_zvkb_crypt(struct skcipher_request *req)
 {
 	u32 iv[CHACHA_IV_SIZE / sizeof(u32)];
@@ -141,6 +203,31 @@ static struct skcipher_alg riscv64_v_chacha_alg = {
 		.cra_module = THIS_MODULE,
 	},
 };
+
+void hchacha_block_arch(const u32 *state, u32 *stream, int nrounds)
+{
+	hchacha_block_generic(state, stream, nrounds);
+}
+EXPORT_SYMBOL(hchacha_block_arch);
+
+void chacha_init_arch(u32 *state, const u32 *key, const u8 *iv)
+{
+	chacha_init_generic(state, key, iv);
+}
+EXPORT_SYMBOL(chacha_init_arch);
+
+void chacha_crypt_arch(u32 *state, u8 *dst, const u8 *src,
+		       unsigned int bytes, int nrounds)
+{
+	// riscv64 chacha20 implementation has 20 rounds hard-coded
+	if (riscv_vector_vlen() < 128 || nrounds != 20)
+		return chacha_crypt_generic(state, dst, src, bytes, nrounds);
+
+	if (riscv_isa_extension_available(NULL, ZVKB))
+		return do_chacha20_zvkb(state, src, dst, bytes);
+	return do_chacha20_v(state, src, dst, bytes);
+}
+EXPORT_SYMBOL(chacha_crypt_arch);
 
 static int __init riscv64_chacha_mod_init(void)
 {

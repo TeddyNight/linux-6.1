@@ -88,7 +88,7 @@
 	vsll.vi		v26, \d2, 16
 	vsll.vi		v27, \d3, 16
 	vsrl.vi		\d0, \d0, 32 - 16	
-	vsrl.vi		\d0, \d1, 32 - 16	
+	vsrl.vi		\d1, \d1, 32 - 16	
 	vsrl.vi		\d2, \d2, 32 - 16	
 	vsrl.vi		\d3, \d3, 32 - 16	
 	vor.vv		\d0, \d0, v24
