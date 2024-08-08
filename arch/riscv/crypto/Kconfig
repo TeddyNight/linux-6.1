@@ -31,4 +31,13 @@ config CRYPTO_CHACHA_RISCV64
 	  - V vector extension
 	  - Zvkb vector crypto extension
 
+config CRYPTO_POLY1305_RISCV
+	tristate "Ciphers: Poly1305"
+	select CRYPTO_ARCH_HAVE_LIB_POLY1305
+	help
+	  Poly1305 authenticator algorithm (RFC7539)
+
+	  Architecture: riscv64 using:
+	  - V vector extension
+
 endmenu
