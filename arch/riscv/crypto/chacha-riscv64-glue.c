@@ -21,7 +21,7 @@ asmlinkage void chacha20_v(const u32 key[8], const u8 *in, u8 *out,
 static void do_chacha20_v(u32 *state, const u8 *src, u8 *dst,
 		              int bytes)
 {
-	u8 block_buffer[CHACHA_BLOCK_SIZE];
+	u8 block_buffer[CHACHA_BLOCK_SIZE * 4];
 	unsigned int nbytes;
 	unsigned int tail_bytes;
 	while (bytes > 0) {
@@ -30,17 +30,20 @@ static void do_chacha20_v(u32 *state, const u8 *src, u8 *dst,
 		tail_bytes = l & (CHACHA_BLOCK_SIZE - 1);
 		kernel_vector_begin();
 		if (nbytes) {
-			chacha20_v(&state[4], src, dst,
+			memcpy(block_buffer, src, nbytes);
+			chacha20_v(&state[4], block_buffer, block_buffer,
 				   nbytes, &state[12]);
+			memcpy(dst, block_buffer, nbytes);
 			state[12] += nbytes / CHACHA_BLOCK_SIZE;
 		}
 		if (l == bytes && tail_bytes > 0) {
-			memcpy(block_buffer, src,
+			memcpy(block_buffer, src + nbytes,
 			       tail_bytes);
 			chacha20_v(&state[4], block_buffer, block_buffer,
 			           CHACHA_BLOCK_SIZE, &state[12]);
-			memcpy(dst, block_buffer,
+			memcpy(dst + nbytes, block_buffer,
 			       tail_bytes);
+			state[12] += 1;
 		}
 		kernel_vector_end();
 		bytes -= l;
@@ -61,17 +64,20 @@ static void do_chacha20_zvkb(u32 *state, const u8 *src, u8 *dst,
 		tail_bytes = l & (CHACHA_BLOCK_SIZE - 1);
 		kernel_vector_begin();
 		if (nbytes) {
-			chacha20_zvkb(&state[4], src, dst,
+			memcpy(block_buffer, src, nbytes);
+			chacha20_zvkb(&state[4], block_buffer, block_buffer,
 				   nbytes, &state[12]);
+			memcpy(dst, block_buffer, nbytes);
 			state[12] += nbytes / CHACHA_BLOCK_SIZE;
 		}
 		if (l == bytes && tail_bytes > 0) {
-			memcpy(block_buffer, src,
+			memcpy(block_buffer, src + nbytes,
 			       tail_bytes);
 			chacha20_zvkb(&state[4], block_buffer, block_buffer,
 			           CHACHA_BLOCK_SIZE, &state[12]);
-			memcpy(dst, block_buffer,
+			memcpy(dst + nbytes, block_buffer,
 			       tail_bytes);
+			state[12] += 1;
 		}
 		kernel_vector_end();
 		bytes -= l;
