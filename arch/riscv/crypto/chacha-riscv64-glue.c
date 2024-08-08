@@ -21,11 +21,11 @@ asmlinkage void chacha20_v(const u32 key[8], const u8 *in, u8 *out,
 static void do_chacha20_v(u32 *state, const u8 *src, u8 *dst,
 		              int bytes)
 {
-	u8 block_buffer[CHACHA_BLOCK_SIZE * 4];
+	u8 block_buffer[CHACHA_BLOCK_SIZE * 8];
 	unsigned int nbytes;
 	unsigned int tail_bytes;
 	while (bytes > 0) {
-		int l = min(bytes, CHACHA_BLOCK_SIZE * 4);
+		int l = min(bytes, CHACHA_BLOCK_SIZE * 8);
 		nbytes = l & ~(CHACHA_BLOCK_SIZE - 1);
 		tail_bytes = l & (CHACHA_BLOCK_SIZE - 1);
 		kernel_vector_begin();
@@ -55,11 +55,11 @@ static void do_chacha20_v(u32 *state, const u8 *src, u8 *dst,
 static void do_chacha20_zvkb(u32 *state, const u8 *src, u8 *dst,
 		              int bytes)
 {
-	u8 block_buffer[CHACHA_BLOCK_SIZE];
+	u8 block_buffer[CHACHA_BLOCK_SIZE * 8];
 	unsigned int nbytes;
 	unsigned int tail_bytes;
 	while (bytes > 0) {
-		int l = min(bytes, CHACHA_BLOCK_SIZE * 4);
+		int l = min(bytes, CHACHA_BLOCK_SIZE * 8);
 		nbytes = l & ~(CHACHA_BLOCK_SIZE - 1);
 		tail_bytes = l & (CHACHA_BLOCK_SIZE - 1);
 		kernel_vector_begin();
