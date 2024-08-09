@@ -137,7 +137,7 @@
 //
 // |len| must be nonzero and a multiple of 64 (CHACHA_BLOCK_SIZE).
 // The counter is treated as 32-bit, following the RFC7539 convention.
-SYM_FUNC_START(chacha20_zvkb)
+SYM_FUNC_START(chacha20_riscv64)
 	srli		LEN, LEN, 6	// Bytes to blocks
 
 	addi		sp, sp, -96
@@ -291,4 +291,4 @@ SYM_FUNC_START(chacha20_zvkb)
 	ld		s11, 88(sp)
 	addi		sp, sp, 96
 	ret
-SYM_FUNC_END(chacha20_zvkb)
+SYM_FUNC_END(chacha20_riscv64)
