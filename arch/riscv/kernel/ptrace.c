@@ -283,6 +283,9 @@ unsigned long regs_get_kernel_stack_nth(struct pt_regs *regs, unsigned int n)
 void ptrace_disable(struct task_struct *child)
 {
 	clear_tsk_thread_flag(child, TIF_SYSCALL_TRACE);
+#ifdef TIF_SYSCALL_EMU
+	clear_tsk_thread_flag(child, TIF_SYSCALL_EMU);
+#endif
 }
 
 long arch_ptrace(struct task_struct *child, long request,
@@ -308,6 +311,11 @@ __visible int do_syscall_trace_enter(struct pt_regs *regs)
 	if (test_thread_flag(TIF_SYSCALL_TRACE))
 		if (ptrace_report_syscall_entry(regs))
 			return -1;
+
+	if (test_thread_flag(TIF_SYSCALL_EMU)) {
+		ptrace_report_syscall_entry(regs);
+		return -1;
+	}
 
 	/*
 	 * Do the secure computing after ptrace; failures should be fast.
