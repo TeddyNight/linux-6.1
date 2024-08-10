@@ -379,7 +379,7 @@ handle_syscall_trace_enter:
 	move a0, sp
 	call do_syscall_trace_enter
 	move t0, a0
-	REG_L a0, PT_A0(sp)
+	REG_L a0, PT_ORIG_A0(sp)
 	REG_L a1, PT_A1(sp)
 	REG_L a2, PT_A2(sp)
 	REG_L a3, PT_A3(sp)
