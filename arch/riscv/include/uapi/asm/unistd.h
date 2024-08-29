@@ -20,6 +20,7 @@
 #define __ARCH_WANT_SET_GET_RLIMIT
 #endif /* __LP64__ */
 
+#define __ARCH_WANT_RENAMEAT
 #define __ARCH_WANT_SYS_CLONE3
 #define __ARCH_WANT_MEMFD_SECRET
 

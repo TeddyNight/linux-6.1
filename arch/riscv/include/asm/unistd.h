@@ -8,6 +8,7 @@
  * be included multiple times.
  */
 
+#define __ARCH_WANT_RENAMEAT
 #define __ARCH_WANT_SYS_CLONE
 
 #ifdef CONFIG_COMPAT
